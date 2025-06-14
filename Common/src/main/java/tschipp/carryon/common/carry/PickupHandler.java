@@ -215,23 +215,28 @@ public class PickupHandler {
             if (!player.isCreative() && otherPlayer.isCreative())
                 return false;
 
+            // TODO: Don't eject if startRiding could fail - cover other cases
+            if (otherPlayer.isShiftKeyDown()) return false;
+            
             otherPlayer.ejectPassengers();
             otherPlayer.stopRiding();
 
-            if (result.isPresent()) {
-                String cmd = result.get().scriptEffects().commandInit();
-                if (!cmd.isEmpty())
-                    player.getServer().getCommands().performPrefixedCommand(player.getServer().createCommandSourceStack(), "/execute as " + player.getGameProfile().getName() + " run " + cmd);
+            if (otherPlayer.startRiding(player)) {
+                if (result.isPresent()) {
+                    String cmd = result.get().scriptEffects().commandInit();
+                    if (!cmd.isEmpty())
+                        player.getServer().getCommands().performPrefixedCommand(player.getServer().createCommandSourceStack(), "/execute as " + player.getGameProfile().getName() + " run " + cmd);
+                }
+
+                Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), true), player);
+                carry.setCarryingPlayer();
+                player.swing(InteractionHand.MAIN_HAND, true);
+                player.level().playSound(null, player.getOnPos(), SoundEvents.ARMOR_EQUIP_GENERIC.value(), SoundSource.AMBIENT, 1.0f, 0.5f);
+                CarryOnDataManager.setCarryData(player, carry);
+                return true;
+            } else {
+                return false;
             }
-
-            otherPlayer.startRiding(player);
-            Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), true), player);
-            carry.setCarryingPlayer();
-            player.swing(InteractionHand.MAIN_HAND, true);
-            player.level().playSound(null, player.getOnPos(), SoundEvents.ARMOR_EQUIP_GENERIC.value(), SoundSource.AMBIENT, 1.0f, 0.5f);
-            CarryOnDataManager.setCarryData(player, carry);
-            return true;
-
         }
 
         entity.ejectPassengers();

@@ -223,7 +223,13 @@ public class PlacementHandler
 			entityHeld = player.getFirstPassenger();
 
 
-		double sizeHeldEntity = entityHeld.getBbHeight() * entityHeld.getBbWidth();
+		double sizeHeldEntity = 0;
+		if (entityHeld != null) {
+			sizeHeldEntity = entityHeld.getBbHeight() * entityHeld.getBbWidth();
+		} else {
+			Constants.LOG.error("entityHeld is null for player " + player + " with entityClicked: " + entityClicked);
+			return;
+		}
 		double distance = entityClicked.blockPosition().distSqr(player.blockPosition());
 		Entity lowestEntity = entityClicked.getRootVehicle();
 		int numPassengers = getPassengerCount(lowestEntity);
